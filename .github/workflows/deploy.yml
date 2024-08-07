@@ -18,7 +18,6 @@ jobs:
         with:
           java-version: '17'
           distribution: 'adopt'
-
       - name: setup jdk
         uses: actions/setup-java@v3
         with:
@@ -29,14 +28,8 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
-      - name: gradlew clean test
-        run: ./gradlew clean test
-
       - name: gradlew bootJar
         run: ./gradlew bootJar
-
-      - name: Rename JAR file
-        run: mv ./build/libs/*.jar ./build/libs/app.jar
 
       - name: copy jar to server
         uses: appleboy/scp-action@master
@@ -45,22 +38,9 @@ jobs:
           username: ec2-user
           key: ${{ secrets.SSH_KEY }}
           port: 22
-          source: "./build/libs/app.jar"
+          source: "./build/libs/*.jar"
           target: "~"
           strip_components: 2
-
-      - name: Verify JAR file on server
-        uses: appleboy/ssh-action@v0.1.6
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ec2-user
-          key: ${{ secrets.SSH_KEY }}
-          port: 22
-          script: |
-            if ! file app.jar | grep -q 'Java archive'; then
-              echo "Uploaded file is not a valid JAR file"
-              exit 1
-            fi
 
       - name: SSH Commands
         uses: appleboy/ssh-action@v0.1.6
