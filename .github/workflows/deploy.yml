@@ -49,5 +49,4 @@ jobs:
           port: 22
           script_stop: true
           script: |
-            pkill -f 'java -jar'
-            nohup java -jar app.jar 1> app.log 2>&1 & disown
+            java -jar *.jar
