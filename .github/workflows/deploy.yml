@@ -44,7 +44,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: 22
           script_stop: true
-          script: |
+          script: /
             # Kill the existing Java process
             pid=$(pgrep -f 'java -jar')
             if [ -n "$pid" ]; then
