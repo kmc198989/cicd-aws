@@ -28,7 +28,7 @@ jobs:
 
       - name: Test JAR
         run: |
-          java -jar build/libs/your-app.jar &
+          java -jar build/libs/app.jar &
           sleep 30
           curl -f http://localhost:8080/actuator/health
 
