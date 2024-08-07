@@ -77,12 +77,11 @@ jobs:
 
             echo "Java application started successfully."
             tail -n 100 app.log
-
-    debug: true
-    sync: false
-    use_insecure_cipher: false
-    timeout: 30s
-    command_timeout: 10m
-    proxy_port: 22
-    proxy_timeout: 30s
-    proxy_use_insecure_cipher: false
+          debug: true
+          sync: false
+          use_insecure_cipher: false
+          timeout: 30s
+          command_timeout: 10m
+          proxy_port: 22
+          proxy_timeout: 30s
+          proxy_use_insecure_cipher: false
