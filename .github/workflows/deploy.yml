@@ -42,6 +42,6 @@ jobs:
           username: ec2-user
           key: ${{ secrets.SSH_KEY }}
           port: 22
-          script: |
+          script: \
             pkill -f 'java -jar' || true
             nohup java -jar ~/app.jar > ~/app.log 2>&1 &
