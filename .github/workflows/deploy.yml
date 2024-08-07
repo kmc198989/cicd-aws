@@ -1,33 +1,28 @@
 name: Deploy
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    env:
-      JAVA_HOME: /opt/hostedtoolcache/Java_Adopt_jdk/17.0.12-7/x64
+
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set up JDK 17
         uses: actions/setup-java@v2
         with:
+          distribution: 'temurin'
           java-version: '17'
-          distribution: 'adopt'
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x ./gradlew
-
-      - name: gradlew bootJar
+      - name: Build with Gradle
         run: ./gradlew bootJar
 
-      - name: Copy jar to server
+      - name: SCP Jar to server
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -35,53 +30,15 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: 22
           source: "./build/libs/*.jar"
-          target: "~"
-          strip_components: 2
+          target: "~/app.jar"
 
-      - name: SSH Commands
-        uses: appleboy/ssh-action@v0.1.6
+      - name: SSH and run jar
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ec2-user
           key: ${{ secrets.SSH_KEY }}
           port: 22
-          script_stop: true
           script: |
-            echo "Killing existing Java process..."
-            pid=$(pgrep -f 'java -jar')
-            if [ -n "$pid" ]; then
-              kill -9 $pid
-              echo "Java process $pid killed."
-            else
-              echo "No Java process found."
-            fi
-
-            echo "Verifying if the process was killed..."
-            sleep 2
-            if pgrep -f 'java -jar'; then
-              echo "Failed to kill the existing Java process."
-              exit 1
-            fi
-
-            echo "Starting new Java process..."
-            nohup java -jar *.jar > app.log 2>&1 &
-
-            echo "Waiting for the app to start..."
-            sleep 5
-
-            echo "Checking if the new process has started..."
-            if ! pgrep -f 'java -jar'; then
-              echo "Failed to start the Java application."
-              exit 1
-            fi
-
-            echo "Java application started successfully."
-            tail -n 100 app.log
-          debug: true
-          sync: false
-          use_insecure_cipher: false
-          timeout: 30s
-          command_timeout: 10m
-          proxy_port: 22
-          proxy_timeout: 30s
-          proxy_use_insecure_cipher: false
+            pkill -f 'java -jar' || true
+            nohup java -jar ~/app.jar > ~/app.log 2>&1 &
