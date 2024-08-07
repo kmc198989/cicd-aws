@@ -12,19 +12,23 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
       - name: Set up JDK 17
         uses: actions/setup-java@v2
         with:
           java-version: '17'
           distribution: 'adopt'
-
+      - name: setup jdk
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
-
+      - name: gradlew clean test
+        run: ./gradlew clean test
       - name: gradlew bootJar
         run: ./gradlew bootJar
-
       - name: copy jar to server
         uses: appleboy/scp-action@master
         with:
@@ -45,22 +49,5 @@ jobs:
           port: 22
           script_stop: true
           script: |
-            echo "Killing existing Java process..."
-            pid=$(pgrep -f 'java -jar')
-            if [ -n "$pid" ]; then
-              kill -9 $pid
-              echo "Java process $pid killed."
-            else
-              echo "No Java process found."
-            fi
-            echo "Starting new Java process..."
-            nohup java -jar *.jar > app.log 2>&1 &
-            echo "Waiting for the app to start..."
-            sleep 5
-            echo "Checking if the new process has started..."
-            if ! pgrep -f 'java -jar'; then
-              echo "Failed to start the Java application."
-              exit 1
-            fi
-            echo "Java application started successfully."
-            tail -n 100 app.log
+            pkill -f 'java -jar'
+            nohup java -jar app.jar 1> app.log 2>&1 &
